@@ -1,8 +1,10 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -g -Iinclude
+CC ?= gcc
+CFLAGS ?= -Wall -Wextra -g -Iinclude
+
+PREFIX ?= /usr
+BINDIR ?= $(PREFIX)/bin
 
 TARGET = hotspotctl
-
 OBJS = main.o hostapd.o dnsmasq.o cli.o firewall.o auto.o
 
 all: $(TARGET)
@@ -31,8 +33,10 @@ auto.o: src/auto.c include/auto.h include/hostapd.h
 clean:
 	rm -f $(OBJS) $(TARGET)
 
-install:
-	install -Dm755 hotspotctl /usr/bin/hotspotctl
+install: $(TARGET)
+	install -Dm755 $(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 
 uninstall:
-	rm -f /usr/bin/hotspotctl
+	rm -f $(DESTDIR)$(BINDIR)/$(TARGET)
+
+.PHONY: all clean install uninstall

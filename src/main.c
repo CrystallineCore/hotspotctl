@@ -62,6 +62,7 @@ int prepare_environment(HotspotConfig cfg){
     system(cmd);
     snprintf(cmd, sizeof(cmd), "ip addr add 192.168.42.1/24 dev %s", cfg.iface);
     system(cmd);
+    modified_env = 1;
     return 0;
 }
 
@@ -76,7 +77,7 @@ void daemonize()
     pid_t pid = fork();
     if (pid < 0)
     {
-        fprintf(stderr, "Failed to fork\n");
+        fprintf(stderr, "[-] Failed to fork\n");
         exit(1);
     }
     if (pid > 0)
@@ -86,7 +87,7 @@ void daemonize()
 
     if (setsid() < 0)
     {
-        fprintf(stderr, "Setsid failed\n");
+        fprintf(stderr, "[-] Setsid failed\n");
         exit(1);
     }
     pid = fork();
@@ -113,7 +114,7 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
         FILE *f = fopen("/run/hotspotctl/hotspotctl.pid", "r");
         if (!f)
         {
-            fprintf(stderr, "Error, could not open file\n");
+            fprintf(stderr, "[-] Error, could not open file\n");
             return 1;
         }
         char line[32];
@@ -121,17 +122,17 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
         pid_t pid = atoi(line);
         if (pid <= 0)
         {
-            fprintf(stderr, "Error, invalid pid\n");
+            fprintf(stderr, "[-] Error, invalid pid\n");
             return 1;
         }
 
         if (kill(pid, SIGTERM) == 0)
         {
-            fprintf(stdout, "Hotspotctl going down\n");
+            fprintf(stdout, "[-] Hotspotctl going down\n");
         }
         else
         {
-            fprintf(stdout, "Failed to stop\n");
+            fprintf(stdout, "[-] Failed to stop\n");
             return 1;
         }
         exit(0);
@@ -141,24 +142,29 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
     return 0;
 }
 
+
+int root_access(char* argv[]){
+    if(geteuid() != 0){
+        fprintf(stderr, "[-] Hotspotctl requires root privileges.\n");
+        fprintf(stderr, "[-] Please run it again using : sudo %s\n", argv[0]);
+        return 1;
+    }
+    return 0;
+}
 int main(int argc,char* argv[])
 {
     
     //Check for root access
-    if(geteuid() != 0){
-        fprintf(stderr,"Hotspotctl requires root privileges.\n");
-        fprintf(stderr,"Please run it again using : sudo %s\n",argv[0]);
-        return 1;
-    }
+    if(root_access(argv)) exit(1);
     
     //Handle program exit
     if(atexit(cleanup)!=0){
-        fprintf(stderr,"Failed to clean up\n");
+        fprintf(stderr,"[-] Failed to clean up\n");
         return 1;
     }
     mkdir("/run/hotspotctl", 0755);
     
-
+    //signal interrupts
     struct sigaction response_action;
     response_action.sa_handler = handle_signal_interrupt;
     sigemptyset(&response_action.sa_mask);
@@ -180,19 +186,20 @@ int main(int argc,char* argv[])
     strcpy(iface, cfg.iface);
 
     // Flag altered env
-    if (prepare_environment(cfg) == 0)
+    if (prepare_environment(cfg))
     {
-        modified_env = 1;
+        fprintf(stderr,"[-] An error occurred while preparing the environment\n");
+        exit(1);
     }
 
     if (create_hostapd_conf(&cfg))
     {
-        fprintf(stderr, "An error occurred while creating hostapd.conf\n");
+        fprintf(stderr, "[-] An error occurred while creating hostapd.conf\n");
         exit(1);
     }
     if (create_dnsmasq_conf(&cfg))
     {
-        fprintf(stderr, "An error occurred while creating dnsmasq.conf\n");
+        fprintf(stderr, "[-] An error occurred while creating dnsmasq.conf\n");
         exit(1);
     }
 
