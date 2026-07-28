@@ -50,6 +50,8 @@ void cleanup(){
 
 int prepare_environment(HotspotConfig cfg){
     char cmd[256];
+    snprintf(cmd,sizeof(cmd),"rfkill unblock wlan");
+    system(cmd);
     snprintf(cmd, sizeof(cmd), "ip link set %s up", cfg.iface);
     system(cmd);
     if (system("which nmcli > /dev/null 2>&1") == 0)
