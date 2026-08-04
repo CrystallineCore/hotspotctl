@@ -106,38 +106,57 @@ void daemonize()
     chdir("/");
 }
 
+int kill_hotspotctl(){
+    FILE *f = fopen("/run/hotspotctl/hotspotctl.pid", "r");
+    if (!f)
+    {
+        return 3;
+    }
+    char line[32];
+    fgets(line, sizeof(line), f);
+    pid_t pid = atoi(line);
+    if (pid <= 0)
+    {
+        return 2;
+    }
+
+    if (kill(pid, SIGTERM) == 0)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
 int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
     if (strcmp(argv[1], "start") == 0)
     {
+        int status = kill_hotspotctl();
+        if(status==0){
+            fprintf(stdout,"[*] Killing existing hotspotctl\n");
+        }else if(status==1 || status==2 ){
+            fprintf(stderr,"[-] Hotspotctl already exists, failed to kill exisiting hotspotctl\n");
+            exit(1);
+        }
         start_parse(cfg, argc, argv);
     }
     else if (strcmp(argv[1], "stop") == 0)
     {
-        FILE *f = fopen("/run/hotspotctl/hotspotctl.pid", "r");
-        if (!f)
-        {
+        int status = kill_hotspotctl();
+        if(status==0){
+            fprintf(stdout,"[*] Hotspotctl going down\n");
+            exit(0);
+        }else if(status==1){
+            fprintf(stderr, "[-] Failed to stop\n");
+            exit(1);
+        }else if(status==2){
+            fprintf(stderr,"[-] Error, invalid pid\n");
+            exit(1);
+        }else if(status==3){
             fprintf(stderr, "[-] Error, could not open file\n");
-            return 1;
         }
-        char line[32];
-        fgets(line, sizeof(line), f);
-        pid_t pid = atoi(line);
-        if (pid <= 0)
-        {
-            fprintf(stderr, "[-] Error, invalid pid\n");
-            return 1;
-        }
-
-        if (kill(pid, SIGTERM) == 0)
-        {
-            fprintf(stdout, "[-] Hotspotctl going down\n");
-        }
-        else
-        {
-            fprintf(stdout, "[-] Failed to stop\n");
-            return 1;
-        }
-        exit(0);
         
     }
 
@@ -164,7 +183,6 @@ int main(int argc,char* argv[])
         fprintf(stderr,"[-] Failed to clean up\n");
         return 1;
     }
-    mkdir("/run/hotspotctl", 0755);
     
     //signal interrupts
     struct sigaction response_action;
