@@ -12,6 +12,7 @@
 #include "dnsmasq.h"
 #include "cli.h"
 #include "firewall.h"
+#include "version.h"
 
 int pid1 = -1,pid2 = -1;
 char iface[32];
@@ -158,6 +159,12 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
             fprintf(stderr, "[-] Error, could not open file\n");
         }
         
+    }else if(strcmp(argv[1],"--version")==0){
+        fprintf(stdout,"[*] hotspotctl v%s\n",version);
+        exit(0);
+    }else{
+        fprintf(stdout,"[-] Unknown usage\n");
+        exit(1);
     }
 
     return 0;
