@@ -6,7 +6,7 @@ PREFIX ?= /usr
 BINDIR ?= $(PREFIX)/bin
 
 TARGET = hotspotctl
-OBJS = main.o hostapd.o dnsmasq.o cli.o firewall.o auto.o
+OBJS = main.o hostapd.o dnsmasq.o cli.o firewall.o auto.o docs.o
 
 all: $(TARGET)
 
@@ -30,6 +30,9 @@ firewall.o: src/firewall.c include/firewall.h
 
 auto.o: src/auto.c include/auto.h include/hostapd.h 
 	$(CC) $(CFLAGS) $(INCLUDES) -c src/auto.c -o auto.o
+
+docs.o: src/docs.c include/docs.h  
+	$(CC) $(CFLAGS) $(INCLUDES) -c src/docs.c -o docs.o
 
 clean:
 	rm -f $(OBJS) $(TARGET)

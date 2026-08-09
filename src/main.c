@@ -2,17 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include<signal.h>
+#include <signal.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include<fcntl.h>
+#include <fcntl.h>
 #include "hostapd.h"
 #include "dnsmasq.h"
 #include "cli.h"
 #include "firewall.h"
 #include "version.h"
+#include "docs.h"
 
 int pid1 = -1,pid2 = -1;
 char iface[32];
@@ -162,7 +163,11 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
     }else if(strcmp(argv[1],"--version")==0){
         fprintf(stdout,"[*] hotspotctl v%s\n",version);
         exit(0);
-    }else{
+    }else if (strcmp(argv[1],"--help")==0){
+        help();
+        exit(0);
+    }
+    else{
         fprintf(stdout,"[-] Unknown usage\n");
         exit(1);
     }
