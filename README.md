@@ -26,7 +26,7 @@ No GUI. No bloat. Just a hotspot.
 
 ---
 
-## Installation
+## Manual Installation
 
 **Dependencies**
 ```bash
@@ -43,19 +43,35 @@ sudo make install
 
 ---
 
+## Installation using AUR helpers
+
+**yay**
+```bash
+yay -S hotspotctl-git
+```
+**paru**
+```bash
+paru -S hotspotctl-git
+```
+
+---
+
 ## Usage
 
 **Auto mode — detects everything automatically:**
 ```bash
-sudo hotspotctl -a
+sudo hotspotctl start -a
 ```
 
 **Manual mode — full control:**
 ```bash
-sudo hotspotctl -m -i wlp8s0 -u enp7s0 -s MyWifi -p mypassword -c 36 -b a -r IN
+sudo hotspotctl start -m -i wlp8s0 -u enp7s0 -s MyWifi -p mypassword -c 36 -b a -r IN
 ```
 
-**Stop:** `Ctrl+C` — system is fully restored.
+**Stop:** 
+```bash
+sudo hotspotctl stop
+```
 
 ---
 
