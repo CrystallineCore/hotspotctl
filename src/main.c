@@ -132,6 +132,18 @@ int kill_hotspotctl(){
     }
 }
 
+int write_state(HotspotConfig cfg){
+    FILE* fp = fopen("/run/hotspotctl/hotspotctl.state","w");
+    if(fp==NULL){
+        return 1;
+    }
+    fprintf(fp,"SSID : %s\n",cfg.ssid);
+    fprintf(fp,"IFACE : %s\n",cfg.iface);
+    fprintf(fp,"UPLINK : %s\n",cfg.uplink);
+    fclose(fp);
+    return 0;
+}
+
 int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
     if (strcmp(argv[1], "start") == 0)
     {
@@ -165,6 +177,21 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
         exit(0);
     }else if (strcmp(argv[1],"--help")==0){
         help();
+        exit(0);
+    }else if(strcmp(argv[1],"--connected")==0){
+        char iface [64];
+        FILE* fp = fopen("/run/hotspotctl/hotspotctl.state","r");
+        if(fp == NULL){
+            fprintf(stderr,"[-] Error occured while fetching the state\n");
+            exit(1);
+        }
+        char buffer[64];
+        fgets(buffer,sizeof(iface),fp);
+        fgets(buffer,sizeof(iface),fp);
+        sscanf(buffer,"IFACE : %s",iface);
+
+        
+        get_connected_devices(iface);
         exit(0);
     }
     else{
@@ -276,6 +303,11 @@ int main(int argc,char* argv[])
         activated_firewall = 1;
     }
     firewall_setup(cfg.iface,cfg.uplink);
+
+    if(write_state(cfg)){
+        fprintf(stdout,"[-] Could not write state file\n");
+        exit(1);
+    }
 
     //Success message
     printf("[*] Created Hotspot Successfully\n");

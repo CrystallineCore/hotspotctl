@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include "hostapd.h"
+#include "dnsmasq.h"
 
 int create_dnsmasq_conf(HotspotConfig *cfg)
 {
@@ -27,4 +28,20 @@ int create_dnsmasq_conf(HotspotConfig *cfg)
             cfg->iface);
     fclose(f);
     return 0;
+}
+
+int get_connected_devices(char* iface){
+    char buffer[1024];
+    char cmd[256];
+    char temp[256];
+    snprintf(cmd,sizeof(cmd),"ip neighbour show dev %s",iface);
+    FILE *fp = popen(cmd,"r");
+    while(fgets(buffer,sizeof(buffer),fp)!=NULL){
+        device device;
+        sscanf(buffer,"%s %s %s %s",device.ip_addr,temp,device.mac_addr,device.state);
+        fprintf(stdout,"%s\n",device.ip_addr);
+    }
+    pclose(fp);
+    return 0;
+
 }
