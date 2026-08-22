@@ -332,7 +332,7 @@ int main(int argc,char* argv[])
     
     //Keeping parent process alive while children processes still exist
     while(1){
-        
+        pause();
     }
     
 
