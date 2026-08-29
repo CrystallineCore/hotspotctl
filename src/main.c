@@ -144,9 +144,19 @@ int write_state(HotspotConfig cfg){
     return 0;
 }
 
+int root_access(char* argv[]){
+    if(geteuid() != 0){
+        fprintf(stderr, "[-] Hotspotctl requires root privileges.\n");
+        fprintf(stderr, "[-] Please run it again using : sudo %s\n", argv[0]);
+        return 1;
+    }
+    return 0;
+}
+
 int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
     if (strcmp(argv[1], "start") == 0)
     {
+        if(root_access(argv)) return 1;
         int status = kill_hotspotctl();
         if(status==0){
             fprintf(stdout,"[*] Killing existing hotspotctl\n");
@@ -158,6 +168,7 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
     }
     else if (strcmp(argv[1], "stop") == 0)
     {
+        if(root_access(argv)) return 1;
         int status = kill_hotspotctl();
         if(status==0){
             fprintf(stdout,"[*] Hotspotctl going down\n");
@@ -203,19 +214,10 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
 }
 
 
-int root_access(char* argv[]){
-    if(geteuid() != 0){
-        fprintf(stderr, "[-] Hotspotctl requires root privileges.\n");
-        fprintf(stderr, "[-] Please run it again using : sudo %s\n", argv[0]);
-        return 1;
-    }
-    return 0;
-}
+
 int main(int argc,char* argv[])
 {
     
-    //Check for root access
-    if(root_access(argv)) exit(1);
     
     //Handle program exit
     if(atexit(cleanup)!=0){
