@@ -181,6 +181,7 @@ int check_mode(HotspotConfig *cfg,int argc,char *argv[]){
             exit(1);
         }else if(status==3){
             fprintf(stderr, "[-] Error, could not open file\n");
+            exit(1);
         }
         
     }else if(strcmp(argv[1],"--version")==0){
